@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "DD2424"
+version = "0.1.0"
+description = "project for dd2424"
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+torchvision = "^0.9.1"
+torch = "^1.8.1"
+
+[tool.poetry.dev-dependencies]
+pynvim = "^0.4.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
