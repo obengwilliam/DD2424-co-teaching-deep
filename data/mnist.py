@@ -11,7 +11,7 @@ from .utils import noisify
 
 
 class MNIST(data.Dataset):
-    """`MNIST <http://yann.lecun.com/exdb/mnist/>`_ Dataset.
+    """`Fashion MNIST <https://github.com/zalandoresearch/fashion-mnist>`_ Dataset.
 
     Args:
         root (string): Root directory of dataset where ``processed/training.pt``
