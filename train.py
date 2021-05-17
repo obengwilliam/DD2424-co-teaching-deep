@@ -25,12 +25,12 @@ parser.add_argument('--num_gradual', type = int, default = 10, help='how many ep
 parser.add_argument('--exponent', type = float, default = 1, help='exponent of the forget rate, can be 0.5, 1, 2. This parameter is equal to c in Tc for R(T) in Co-teaching paper.')
 parser.add_argument('--top_bn', action='store_true')
 parser.add_argument('--dataset', type = str, help = 'mnist, cifar10, or cifar100', default = 'cifar10')
-parser.add_argument('--n_epoch', type=int, default=200)
+parser.add_argument('--n_epoch', type=int, default=1)
 parser.add_argument('--seed', type=int, default=1)
-parser.add_argument('--print_freq', type=int, default=50)
+parser.add_argument('--print_freq', type=int, default=1)
 parser.add_argument('--num_workers', type=int, default=4, help='how many subprocesses to use for data loading')
 parser.add_argument('--num_iter_per_epoch', type=int, default=400)
-parser.add_argument('--epoch_decay_start', type=int, default=80)
+parser.add_argument('--epoch_decay_start', type=int, default=1)
 
 args = parser.parse_args()
 
@@ -48,8 +48,8 @@ if args.dataset == 'cifar10':
     input_channel = 3
     num_classes = 10
     args.top_bn = False
-    args.epoch_decay_start = 80
-    args.n_epoch = 200
+    args.epoch_decay_start = 4
+    args.n_epoch = 10
     train_dataset = CIFAR10(root="./data/",
                           train=True,
                           download=True,
@@ -159,20 +159,19 @@ def train(train_loader,epoch, model1, optimizer1, model2, optimizer2):
     for batch, (images, labels, indexes) in enumerate(train_loader):
         if batch > args.num_iter_per_epoch:
             break
-
         X = Variable(images)  # .cuda()
         y = Variable(labels)  # .cuda()
 
         # Compute prediction error
         pred_1 = model1(X)
         pred_2 = model2(X)
-        res1 = accuracy(pred_1, y, topk=(1, 5))
-        res2 = accuracy(pred_2, y, topk=(1, 5))
+        res1 = accuracy(pred_1, y, k_top=(1, 5))
+        res2 = accuracy(pred_2, y, k_top=(1, 5))
         train_size_1 += 1
         train_size_2 += 1
         train_acc_1 += res1
         train_acc_2 += res2
-        train_loss_1, train_loss_2 = loss_coteaching(pred_1, pred_2, t, remember_rate)
+        train_loss_1, train_loss_2 = loss_coteaching(pred_1, pred_2, labels, remember_rate)
         # Forward + Backward + Optimize
         optimizer1.zero_grad()
         train_loss_1.backward()
@@ -271,11 +270,15 @@ def main():
     # training
     for epoch in range(1, args.n_epoch):
 
+        print('11111 training')
         model1.train()
         adjust_learning_rate(optimizer1, epoch)
+
+        print('222222  training')
         model2.train()
         adjust_learning_rate(optimizer2, epoch)
         # train models
+        print('33333')
         train(train_loader,epoch, model1, optimizer1, model2, optimizer2)
         # evaluate models
         test_acc_1, test_acc_2 = evaluate(test_loader, model1, model2)
@@ -288,9 +291,6 @@ def main():
             myfile.write(str(int(epoch)) + ': ' + str(train_acc_1) + ' ' + str(train_acc_2) + ' ' + str(test_acc_1) + " " + str(test_acc_2) + "\n")
         '''
 
+
 if __name__ == '__main__':
     main()
-
-
-
-
