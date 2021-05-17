@@ -1,11 +1,12 @@
 from data.cifar import CIFAR10
+from data.mnist import  MNIST 
 
-train_data  = CIFAR10(
+
+train_data  = MNIST(
         root= './data',
         train = True,
         download= True,
         noise_type= 'symmetric'
         )
 
-for i,target,ind in train_data:
-    print(i, target, ind)
+print(train_data)

@@ -1,2 +1,5 @@
+data/processed
+data/raw
+data/__pycache__
 data/cifar-10-batches-py/
 .ipynb_checkpoints
