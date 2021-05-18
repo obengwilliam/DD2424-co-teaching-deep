@@ -211,7 +211,7 @@ def evaluate(test_loader, model1, model2):
     print('Enter the evaluate')
     with torch.no_grad():
         for images, labels, _ in test_loader:
-            test_size += 1
+            test_size += labels.size(0)
             X = Variable(images).cuda()
 
             pred_1 = model1(X)
