@@ -22,11 +22,11 @@ def loss_coteaching(y_1, y_2, t, R_rate):
 
     # Calculate the loss of Network 1 and pick up the R_rate% smallest ones' index
     loss_1 = F.cross_entropy(y_1, t, reduction='none') # Ignore the mean loss and return the loss of each element
-    loss1_sorted_ind = bn.argpartition(loss_1.data, kth=num_rem)[:num_rem]  # .cuda()
+    loss1_sorted_ind = np.argpartition(loss_1.cpu().data, kth=num_rem)[:num_rem].cuda()
 
     # Calculate the loss of Network 2 and rank
     loss_2 = F.cross_entropy(y_2, t, reduction='none')
-    loss2_sorted_ind = bn.argpartition(loss_2.data, kth=num_rem)[:num_rem]  # .cuda()
+    loss2_sorted_ind = np.argpartition(loss_2.cpu().data, kth=num_rem)[:num_rem].cuda()
 
     # Exchange the index and use the other network's sample to calculate the loss
     loss_1_exchanged = F.cross_entropy(y_1[loss2_sorted_ind], t[loss2_sorted_ind])
