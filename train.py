@@ -25,12 +25,12 @@ parser.add_argument('--num_gradual', type = int, default = 10, help='how many ep
 parser.add_argument('--exponent', type = float, default = 1, help='exponent of the forget rate, can be 0.5, 1, 2. This parameter is equal to c in Tc for R(T) in Co-teaching paper.')
 parser.add_argument('--top_bn', action='store_true')
 parser.add_argument('--dataset', type = str, help = 'mnist, cifar10, or cifar100', default = 'cifar10')
-parser.add_argument('--n_epoch', type=int, default=1)
+parser.add_argument('--n_epoch', type=int, default=5)
 parser.add_argument('--seed', type=int, default=1)
 parser.add_argument('--print_freq', type=int, default=1)
 parser.add_argument('--num_workers', type=int, default=4, help='how many subprocesses to use for data loading')
 parser.add_argument('--num_iter_per_epoch', type=int, default=400)
-parser.add_argument('--epoch_decay_start', type=int, default=1)
+parser.add_argument('--epoch_decay_start', type=int, default=3)
 
 args = parser.parse_args()
 
@@ -40,7 +40,7 @@ torch.manual_seed(args.seed)
 
 # Hyper Parameters
 learning_rate = args.lr
-batch_size = 128
+batch_size = 100
 remember_rate = 1 - args.forget_rate
 
 # load dataset
@@ -124,10 +124,13 @@ for i in range(args.epoch_decay_start, args.n_epoch):
 def adjust_learning_rate(optimizer, epoch):
     # Only change beta1
     for param_group in optimizer.param_groups:
-        param_group['lr']=alpha_plan[epoch]
-        param_group['betas']=(beta1_plan[epoch], 0.999) # Only change beta1
+        param_group['lr'] = alpha_plan[epoch]
+        param_group['betas'] = (beta1_plan[epoch], 0.999) # Only change beta1
         
-    # define drop rate schedule
+
+# define drop rate schedule
+rate_schedule = np.ones(args.n_epoch)*(1-remember_rate)
+rate_schedule[:args.num_gradual] = np.linspace(0, (1-remember_rate)**args.exponent, args.num_gradual)
 
 
 def accuracy(logit, target, k_top=(1,)):
@@ -164,14 +167,16 @@ def train(train_loader,epoch, model1, optimizer1, model2, optimizer2):
 
         # Compute prediction error
         pred_1 = model1(X)
+        # pred_1 = pred_1.type(torch.FloatTensor)
         pred_2 = model2(X)
-        res1 = accuracy(pred_1, y, k_top=(1, 5))
-        res2 = accuracy(pred_2, y, k_top=(1, 5))
+        # pred_2 = pred_2.type(torch.FloatTensor)
+        # res1 = accuracy(pred_1, y, k_top=(1, 5))
+        # res2 = accuracy(pred_2, y, k_top=(1, 5))
         train_size_1 += 1
         train_size_2 += 1
-        train_acc_1 += res1
-        train_acc_2 += res2
-        train_loss_1, train_loss_2 = loss_coteaching(pred_1, pred_2, labels, remember_rate)
+        # train_acc_1 += res1
+        # train_acc_2 += res2
+        train_loss_1, train_loss_2 = loss_coteaching(pred_1, pred_2, labels, rate_schedule[epoch])
         # Forward + Backward + Optimize
         optimizer1.zero_grad()
         train_loss_1.backward()
@@ -182,8 +187,8 @@ def train(train_loader,epoch, model1, optimizer1, model2, optimizer2):
         optimizer2.step()
 
         if (batch + 1) % args.print_freq == 0:
-            print('Epoch [%d/%d], Iter [%d/%d] Training Accuracy1: %.4F, Training Accuracy2: %.4f, Loss1: %.4f, Loss2: %.4f'
-                  % (epoch+1, args.n_epoch, i+1, len(train_dataset)//batch_size, res1, res2, train_loss_1.data[0], train_loss_2.data[0]))
+            print('Epoch [%d/%d], Iter [%d/%d], Loss1: %.4f, Loss2: %.4f'
+                  % (epoch+1, args.n_epoch, i+1, len(train_dataset)//batch_size, train_loss_1.data[0], train_loss_2.data[0]))
 
     train_acc_1 = float(train_acc_1) / float(train_size_1)
     train_acc_2 = float(train_acc_2) / float(train_size_2)
@@ -202,21 +207,22 @@ def evaluate(test_loader, model1, model2):
     test_loss_2, acc2 = 0, 0
     test_size = 0
 
+    print('Enter the evaluate')
     with torch.no_grad():
         for images, labels, _ in test_loader:
+            print('for loop in EVA')
             test_size += 1
             X = Variable(images)  # .cuda()
-            y = Variable(labels)  # .cuda()
 
             pred_1 = model1(X)
             output_1 = F.softmax(pred_1, dim = 1)
             _, y_1 = torch.max(output_1.data, 1)
-            acc1 += (y_1.cpu() == y).sum()
+            acc1 += (y_1.cpu() == labels).sum()
 
             pred_2 = model2(X)
             output_2 = F.softmax(pred_2, dim = 1)
             _, y_2 = torch.max(output_2.data, 1)
-            acc2 += (y_2.cpu() == y).sum()
+            acc2 += (y_2.cpu() == labels).sum()
     
     acc1 = 100 * float(acc1) / float(test_size)
     acc2 = 100 * float(acc2) / float(test_size)
@@ -226,6 +232,9 @@ def evaluate(test_loader, model1, model2):
 def main():
     # Data Loader (Input Pipeline)
     print('loading dataset...')
+    # part_train, desert_train = torch.utils.data.random_split(train_dataset, [int(1000), len(train_dataset) - int(1000)])
+    # part_test, desert_test = torch.utils.data.random_split(test_dataset, [int(200), len(test_dataset) - int(200)])
+
     train_loader = torch.utils.data.DataLoader(dataset = train_dataset,
                                           batch_size = batch_size,
                                           num_workers = args.num_workers,
@@ -242,11 +251,11 @@ def main():
     # Define models
     print('building model')
     model1 = CNN(input_channel = input_channel, n_outputs = num_classes)
-    model1  # .cuda()
+    # model1.cuda()
     optimizer1 = torch.optim.Adam(model1.parameters(), lr=learning_rate)
 
     model2 = CNN(input_channel=input_channel, n_outputs=num_classes)
-    model2  # .cuda()
+    # model2.cuda()
     optimizer2 = torch.optim.Adam(model2.parameters(), lr=learning_rate)
 
     epoch = 0
@@ -267,6 +276,8 @@ def main():
     acc1, acc2 = evaluate(test_loader, model1, model2)
     # save results
 
+    print('enter for loop')
+
     # training
     for epoch in range(1, args.n_epoch):
 
@@ -279,7 +290,7 @@ def main():
         adjust_learning_rate(optimizer2, epoch)
         # train models
         print('33333')
-        train(train_loader,epoch, model1, optimizer1, model2, optimizer2)
+        train(train_loader, epoch, model1, optimizer1, model2, optimizer2)
         # evaluate models
         test_acc_1, test_acc_2 = evaluate(test_loader, model1, model2)
 
