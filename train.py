@@ -299,7 +299,7 @@ def main():
         test_acc_1, test_acc_2 = evaluate(test_loader, model1, model2)
 
         # save results
-        print('Epoch [%d/%d] Test Accuracy on the %s test images: Model1 %.4f %% Model2 %.4f %%, Pure Ratio 1 %.4f %%, Pure Ratio 2 %.4f %%' %
+        print('Epoch [%d/%d] Test Accuracy on the %s test images: Model1 %.4f %% Model2 %.4f %%' %
               (epoch+1, args.n_epoch, len(test_dataset), test_acc_1, test_acc_2))
         '''
         with open(txtfile, "a") as myfile:
