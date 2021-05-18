@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import torchvision.transforms as transforms
-from cifar import CIFAR10
+from data.cifar import CIFAR10
 # from data.mnist import MNIST
 from NetWork import CNN
 import argparse, sys
