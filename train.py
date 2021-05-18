@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import torchvision.transforms as transforms
-from cifar import CIFAR10
+from data.cifar import CIFAR10
 # from data.mnist import MNIST
 from NetWork import CNN
 import argparse, sys
@@ -28,7 +28,7 @@ parser.add_argument('--dataset', type = str, help = 'mnist, cifar10, or cifar100
 parser.add_argument('--n_epoch', type=int, default=5)
 parser.add_argument('--seed', type=int, default=1)
 parser.add_argument('--print_freq', type=int, default=1)
-parser.add_argument('--num_workers', type=int, default=4, help='how many subprocesses to use for data loading')
+parser.add_argument('--num_workers', type=int, default=2, help='how many subprocesses to use for data loading')
 parser.add_argument('--num_iter_per_epoch', type=int, default=400)
 parser.add_argument('--epoch_decay_start', type=int, default=3)
 
@@ -36,7 +36,7 @@ args = parser.parse_args()
 
 # Seed
 torch.manual_seed(args.seed)
-# torch.cuda.manual_seed(args.seed)
+torch.cuda.manual_seed(args.seed)
 
 # Hyper Parameters
 learning_rate = args.lr
@@ -162,8 +162,8 @@ def train(train_loader, epoch, model1, optimizer1, model2, optimizer2):
     for batch, (images, labels, indexes) in enumerate(train_loader):
         if batch > args.num_iter_per_epoch:
             break
-        X = Variable(images)  # .cuda()
-        y = Variable(labels)  # .cuda()
+        X = Variable(images).cuda()
+        y = Variable(labels).cuda()
 
         # Compute prediction error
         pred_1 = model1(X)
@@ -212,7 +212,7 @@ def evaluate(test_loader, model1, model2):
     with torch.no_grad():
         for images, labels, _ in test_loader:
             test_size += 1
-            X = Variable(images)  # .cuda()
+            X = Variable(images).cuda()
 
             pred_1 = model1(X)
             output_1 = F.softmax(pred_1, dim = 1)
@@ -223,7 +223,7 @@ def evaluate(test_loader, model1, model2):
     # Change model to 'eval' mode.
     with torch.no_grad():
         for images, labels, _ in test_loader:
-            X = Variable(images)  # .cuda()
+            X = Variable(images).cuda()
 
             pred_2 = model2(X)
             output_2 = F.softmax(pred_2, dim = 1)
@@ -258,11 +258,11 @@ def main():
     # Define models
     print('building model')
     model1 = CNN(input_channel = input_channel, n_outputs = num_classes)
-    # model1.cuda()
+    model1.cuda()
     optimizer1 = torch.optim.Adam(model1.parameters(), lr=learning_rate)
 
     model2 = CNN(input_channel=input_channel, n_outputs=num_classes)
-    # model2.cuda()
+    model2.cuda()
     optimizer2 = torch.optim.Adam(model2.parameters(), lr=learning_rate)
 
     epoch = 0
