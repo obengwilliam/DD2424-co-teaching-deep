@@ -16,7 +16,7 @@ import bottleneck as bn
 # Output:
 #       loss_1  exchanged loss from N2 to N1
 #       loss_2  exchanged loss from N1 to N2
-def loss_coteaching(y_1, y_2, t, R_rate, ind, noise_or_not):
+def loss_coteaching(y_1, y_2, t, R_rate):
     # Compute the number of data remembered
     num_rem = int(len(t) * R_rate)
 
