@@ -151,7 +151,7 @@ def accuracy(logit, target, k_top=(1,)):
 
 
 # Train the Model
-def train(train_loader,epoch, model1, optimizer1, model2, optimizer2):
+def train(train_loader, epoch, model1, optimizer1, model2, optimizer2):
     print('Training ...')
 
     train_loss_1, train_acc_1 = 0, 0
@@ -176,7 +176,7 @@ def train(train_loader,epoch, model1, optimizer1, model2, optimizer2):
         train_size_2 += 1
         # train_acc_1 += res1
         # train_acc_2 += res2
-        train_loss_1, train_loss_2 = loss_coteaching(pred_1, pred_2, labels, rate_schedule[epoch])
+        train_loss_1, train_loss_2 = loss_coteaching(pred_1, pred_2, y, rate_schedule[epoch])
         # Forward + Backward + Optimize
         optimizer1.zero_grad()
         train_loss_1.backward()
@@ -200,18 +200,17 @@ def train(train_loader,epoch, model1, optimizer1, model2, optimizer2):
 # Evaluate the Model
 def evaluate(test_loader, model1, model2):
     print('Evaluating ...')
-    
-    model1.eval() 
-    model2.eval()
-    # Change model to 'eval' mode.
+
     test_loss_1, acc1 = 0, 0
     test_loss_2, acc2 = 0, 0
     test_size = 0
 
+    model1.eval()
+    # Change model to 'eval' mode.
+
     print('Enter the evaluate')
     with torch.no_grad():
         for images, labels, _ in test_loader:
-            print('for loop in EVA')
             test_size += 1
             X = Variable(images)  # .cuda()
 
@@ -220,10 +219,17 @@ def evaluate(test_loader, model1, model2):
             _, y_1 = torch.max(output_1.data, 1)
             acc1 += (y_1.cpu() == labels).sum()
 
+    model2.eval()
+    # Change model to 'eval' mode.
+    with torch.no_grad():
+        for images, labels, _ in test_loader:
+            X = Variable(images)  # .cuda()
+
             pred_2 = model2(X)
             output_2 = F.softmax(pred_2, dim = 1)
             _, y_2 = torch.max(output_2.data, 1)
             acc2 += (y_2.cpu() == labels).sum()
+
     
     acc1 = 100 * float(acc1) / float(test_size)
     acc2 = 100 * float(acc2) / float(test_size)
