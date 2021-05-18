@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import torchvision.transforms as transforms
-from data.cifar import CIFAR10
+from cifar import CIFAR10
 # from data.mnist import MNIST
 from NetWork import CNN
 import argparse, sys
@@ -186,10 +186,11 @@ def train(train_loader,epoch, model1, optimizer1, model2, optimizer2):
         train_loss_2.backward()
         optimizer2.step()
 
+        '''
         if (batch + 1) % args.print_freq == 0:
             print('Epoch [%d/%d], Iter [%d/%d], Loss1: %.4f, Loss2: %.4f'
                   % (epoch+1, args.n_epoch, i+1, len(train_dataset)//batch_size, train_loss_1.data[0], train_loss_2.data[0]))
-
+        '''
     train_acc_1 = float(train_acc_1) / float(train_size_1)
     train_acc_2 = float(train_acc_2) / float(train_size_2)
 
@@ -281,15 +282,12 @@ def main():
     # training
     for epoch in range(1, args.n_epoch):
 
-        print('11111 training')
         model1.train()
         adjust_learning_rate(optimizer1, epoch)
 
-        print('222222  training')
         model2.train()
         adjust_learning_rate(optimizer2, epoch)
         # train models
-        print('33333')
         train(train_loader, epoch, model1, optimizer1, model2, optimizer2)
         # evaluate models
         test_acc_1, test_acc_2 = evaluate(test_loader, model1, model2)
