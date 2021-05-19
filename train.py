@@ -25,7 +25,7 @@ parser.add_argument('--num_gradual', type = int, default = 10, help='how many ep
 parser.add_argument('--exponent', type = float, default = 1, help='exponent of the forget rate, can be 0.5, 1, 2. This parameter is equal to c in Tc for R(T) in Co-teaching paper.')
 parser.add_argument('--top_bn', action='store_true')
 parser.add_argument('--dataset', type = str, help = 'mnist, cifar10, or cifar100', default = 'cifar10')
-parser.add_argument('--n_epoch', type=int, default=5)
+parser.add_argument('--n_epoch', type=int, default=200)
 parser.add_argument('--seed', type=int, default=1)
 parser.add_argument('--print_freq', type=int, default=1)
 parser.add_argument('--num_workers', type=int, default=2, help='how many subprocesses to use for data loading')
@@ -49,7 +49,7 @@ if args.dataset == 'cifar10':
     num_classes = 10
     args.top_bn = False
     args.epoch_decay_start = 4
-    args.n_epoch = 10
+    args.n_epoch = 200
     train_dataset = CIFAR10(root="./data/",
                           train=True,
                           download=True,
