@@ -10,6 +10,7 @@ from data.cifar import CIFAR10
 from NetWork import CNN
 import argparse, sys
 import numpy as np
+import wandb
 import datetime
 import shutil
 
@@ -39,7 +40,13 @@ torch.manual_seed(args.seed)
 torch.cuda.manual_seed(args.seed)
 
 # Hyper Parameters
-learning_rate = args.lr
+learning_rate = wandb.config.learning_rate = args.lr
+weight_reg = wandb.config.weight_reg = 1
+weight_noobj = wandb.config.weight_noobj = 1
+
+# run name (to easily identify model later)
+time_string = datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
+run_name = wandb.config.run_name = "det_{}".format(time_string)
 batch_size = 100
 remember_rate = 1 - args.forget_rate
 
@@ -159,6 +166,8 @@ def train(train_loader, epoch, model1, optimizer1, model2, optimizer2):
     train_size_1 = 0
     train_size_2 = 0
 
+
+
     for batch, (images, labels, indexes) in enumerate(train_loader):
         if batch > args.num_iter_per_epoch:
             break
@@ -177,6 +186,14 @@ def train(train_loader, epoch, model1, optimizer1, model2, optimizer2):
         # train_acc_1 += res1
         # train_acc_2 += res2
         train_loss_1, train_loss_2 = loss_coteaching(pred_1, pred_2, y, rate_schedule[epoch])
+
+        wandb.log(
+            {
+                "train loss 1": train_loss_1.item(),
+                "train loss 2": train_loss_2.item()
+            },
+            step=train_size_1,
+        )
         # Forward + Backward + Optimize
         optimizer1.zero_grad()
         train_loss_1.backward()
@@ -254,15 +271,17 @@ def main():
                                           drop_last = True,
                                           shuffle = False)
 
-    
+    wandb.init(project="co-teaching")
     # Define models
     print('building model')
     model1 = CNN(input_channel = input_channel, n_outputs = num_classes)
     model1.cuda()
+    wandb.watch(model1)
     optimizer1 = torch.optim.Adam(model1.parameters(), lr=learning_rate)
 
     model2 = CNN(input_channel=input_channel, n_outputs=num_classes)
     model2.cuda()
+    wandb.watch(model2)
     optimizer2 = torch.optim.Adam(model2.parameters(), lr=learning_rate)
 
     epoch = 0
