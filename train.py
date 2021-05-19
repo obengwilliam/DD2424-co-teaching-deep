@@ -11,7 +11,7 @@ from NetWork import CNN
 import argparse, sys
 import numpy as np
 import wandb
-import datetime
+from datetime import datetime
 import shutil
 
 from Loss import loss_coteaching
@@ -165,6 +165,7 @@ def train(train_loader, epoch, model1, optimizer1, model2, optimizer2):
     train_loss_2, train_acc_2 = 0, 0
     train_size_1 = 0
     train_size_2 = 0
+    current_iteration = 1
 
 
 
@@ -192,7 +193,7 @@ def train(train_loader, epoch, model1, optimizer1, model2, optimizer2):
                 "train loss 1": train_loss_1.item(),
                 "train loss 2": train_loss_2.item()
             },
-            step=train_size_1,
+            step= current_iteration,
         )
         # Forward + Backward + Optimize
         optimizer1.zero_grad()
@@ -202,6 +203,8 @@ def train(train_loader, epoch, model1, optimizer1, model2, optimizer2):
         optimizer2.zero_grad()
         train_loss_2.backward()
         optimizer2.step()
+
+        current_iteration += 1
 
         '''
         if (batch + 1) % args.print_freq == 0:
