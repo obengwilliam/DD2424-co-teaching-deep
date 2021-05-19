@@ -48,7 +48,7 @@ if args.dataset == 'cifar10':
     input_channel = 3
     num_classes = 10
     args.top_bn = False
-    args.epoch_decay_start = 4
+    args.epoch_decay_start = 80
     args.n_epoch = 200
     train_dataset = CIFAR10(root="./data/",
                           train=True,
