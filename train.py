@@ -147,7 +147,7 @@ if not os.path.exists(save_dir):
 model_str=args.dataset+'_coteaching_'+args.noise_type+'_'+str(args.noise_rate)
 
 txtfile=save_dir+"/"+model_str+".txt"
-nowTime=datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
+nowTime=datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
 if os.path.exists(txtfile):
     os.system('mv %s %s' % (txtfile, txtfile+".bak-%s" % nowTime))
 
