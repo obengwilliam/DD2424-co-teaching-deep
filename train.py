@@ -18,7 +18,7 @@ from Loss import loss_coteaching
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type = float, default = 0.001)
-parser.add_argument('--result_dir', type = str, help = 'dir to save result txt files', default = 'results/')
+parser.add_argument('--result_dir', type = str, help = 'dir to save result txt files', default = 'results')
 parser.add_argument('--noise_rate', type = float, help = 'corruption rate, should be less than 1', default = 0.2)
 parser.add_argument('--forget_rate', type = float, help = 'forget rate', default=0.2)
 parser.add_argument('--noise_type', type = str, help='[pairflip, symmetric]', default='pairflip')
@@ -139,17 +139,17 @@ def adjust_learning_rate(optimizer, epoch):
 rate_schedule = np.ones(args.n_epoch)*(1-remember_rate)
 rate_schedule[:args.num_gradual] = np.linspace(0, (1-remember_rate)**args.exponent, args.num_gradual)
 
-save_dir = args.result_dir +'/' +args.dataset+'/coteaching/'
+'''save_dir = args.result_dir +args.dataset+'\coteaching'
 
 if not os.path.exists(save_dir):
     os.system('mkdir -p %s' % save_dir)
 
 model_str=args.dataset+'_coteaching_'+args.noise_type+'_'+str(args.noise_rate)
 
-txtfile=save_dir+"/"+model_str+".txt"
+txtfile=save_dir+model_str+".txt"
 nowTime=datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
 if os.path.exists(txtfile):
-    os.system('mv %s %s' % (txtfile, txtfile+".bak-%s" % nowTime))
+    os.system('mv %s %s' % (txtfile, txtfile+".bak-%s" % nowTime))'''
 
 def accuracy(logit, target, k_top=(1,)):
     """Computes the precision@k for the specified values of k"""
@@ -176,7 +176,6 @@ def train(train_loader, epoch, model1, optimizer1, model2, optimizer2):
     train_loss_2, train_acc_2 = 0, 0
     train_size_1 = 0
     train_size_2 = 0
-    current_iteration = 1
 
 
 
@@ -199,13 +198,6 @@ def train(train_loader, epoch, model1, optimizer1, model2, optimizer2):
         # train_acc_2 += res2
         train_loss_1, train_loss_2 = loss_coteaching(pred_1, pred_2, y, 1 - rate_schedule[epoch])
 
-        wandb.log(
-            {
-                "train loss 1": train_loss_1.item(),
-                "train loss 2": train_loss_2.item()
-            },
-            step= current_iteration,
-        )
         # Forward + Backward + Optimize
         optimizer1.zero_grad()
         train_loss_1.backward()
@@ -215,7 +207,6 @@ def train(train_loader, epoch, model1, optimizer1, model2, optimizer2):
         train_loss_2.backward()
         optimizer2.step()
 
-        current_iteration += 1
 
         '''
         if (batch + 1) % args.print_freq == 0:
@@ -298,8 +289,8 @@ def main():
     wandb.watch(model2)
     optimizer2 = torch.optim.Adam(model2.parameters(), lr=learning_rate)
 
-    with open(txtfile, "a") as myfile:
-        myfile.write('epoch: train_acc1 train_acc2 test_acc1 test_acc2\n')
+    '''with open(txtfile, "a") as myfile:
+        myfile.write('epoch: train_acc1 train_acc2 test_acc1 test_acc2\n')'''
 
     epoch = 0
     train_acc_1 = 0
@@ -307,10 +298,10 @@ def main():
     test_acc_1, test_acc_2 = evaluate(test_loader, model1, model2)
     train_acc_1, train_acc_2 = evaluate(train_loader, model1, model2)
 
-    with open(txtfile, "a") as myfile:
+    '''with open(txtfile, "a") as myfile:
         myfile.write(
             str(int(epoch)) + ': ' + str(train_acc_1) + ' ' + str(train_acc_2) + ' ' + str(test_acc_1) + " " + str(
-                test_acc_2) + "\n")
+                test_acc_2) + "\n")'''
 
     # evaluate models with random weights
     acc1, acc2 = evaluate(test_loader, model1, model2)
@@ -331,14 +322,22 @@ def main():
         # evaluate models
         test_acc_1, test_acc_2 = evaluate(test_loader, model1, model2)
         train_acc_1, train_acc_2 = evaluate(train_loader, model1, model2)
+        wandb.log(
+            {
+                "train acc 1": train_acc_1,
+                "train acc 2": train_acc_2,
+                "test acc 1": test_acc_1,
+                "test acc 2": test_acc_2
+            },
+            step= epoch,
+        )
 
         # save results
         print('Epoch [%d/%d] Test Accuracy on the %s test images: Model1 %.4f %% Model2 %.4f %%' %
               (epoch+1, args.n_epoch, len(test_dataset), test_acc_1, test_acc_2))
 
-        with open(txtfile, "a") as myfile:
-            myfile.write(str(int(epoch)) + ': ' + str(train_acc_1) + ' ' + str(train_acc_2) + ' ' + str(test_acc_1) + " " + str(test_acc_2) + "\n")
-
+        '''with open(txtfile, "a") as myfile:
+            myfile.write(str(int(epoch)) + ': ' + str(train_acc_1) + ' ' + str(train_acc_2) + ' ' + str(test_acc_1) + " " + str(test_acc_2) + "\n")'''
 
 
 if __name__ == '__main__':
