@@ -296,7 +296,7 @@ def main():
     train_acc_1 = 0
     train_acc_2 = 0
     test_acc_1, test_acc_2 = evaluate(test_loader, model1, model2)
-    train_acc_1, train_acc_2 = evaluate(train_loader, model1, model2)
+    # train_acc_1, train_acc_2 = evaluate(train_loader, model1, model2)
 
     '''with open(txtfile, "a") as myfile:
         myfile.write(
@@ -321,11 +321,11 @@ def main():
         train(train_loader, epoch, model1, optimizer1, model2, optimizer2)
         # evaluate models
         test_acc_1, test_acc_2 = evaluate(test_loader, model1, model2)
-        train_acc_1, train_acc_2 = evaluate(train_loader, model1, model2)
+        # train_acc_1, train_acc_2 = evaluate(train_loader, model1, model2)
         wandb.log(
             {
-                "train acc 1": train_acc_1,
-                "train acc 2": train_acc_2,
+                # "train acc 1": train_acc_1,
+                # "train acc 2": train_acc_2,
                 "test acc 1": test_acc_1,
                 "test acc 2": test_acc_2
             },
