@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import torchvision.transforms as transforms
 from data.cifar import CIFAR10
-# from data.mnist import MNIST
+from data.mnist import MNIST
 from NetWork import CNN
 import argparse, sys
 import numpy as np
@@ -59,7 +59,7 @@ if args.dataset == 'cifar10':
     num_classes = 10
     args.top_bn = False
     args.epoch_decay_start = 80
-    args.n_epoch = 200
+    args.n_epoch = 100
     train_dataset = CIFAR10(root="./data/",
                           train=True,
                           download=True,
@@ -98,28 +98,26 @@ if args.dataset == 'cifar100':
                            )
 '''
 
-'''
 if args.dataset == 'minst':
     input_channel = 1
     num_classes = 10
     args.top_bn = False
     args.epoch_decay_start = 80
-    args.n_epoch = 200
-    train_dataset = MINST(root = "./data/", 
+    args.n_epoch = 100
+    train_dataset = MNIST(root = "./data/", 
                           train = True,
                           download = True,
                           transform = transforms.ToTensor(),
                           noise_rate = args.noise_rate,
                           noise_type = args.noise_type
     )
-    test_dataset = MINST(root="./data/",
+    test_dataset = MNIST(root="./data/",
                           train=False,
                           download=True,
                           transform=transforms.ToTensor(),
                           noise_rate=args.noise_rate,
                           noise_type=args.noise_type
                           )
-'''
 
 # Adjust learning rate and betas for Adam Optimizer
 mom1 = 0.9
