@@ -31,9 +31,12 @@ parser.add_argument('--seed', type=int, default=1)
 parser.add_argument('--print_freq', type=int, default=1)
 parser.add_argument('--num_workers', type=int, default=2, help='how many subprocesses to use for data loading')
 parser.add_argument('--num_iter_per_epoch', type=int, default=400)
+
 parser.add_argument('--epoch_decay_start', type=int, default=3)
 
 args = parser.parse_args()
+
+print("Args:", args)
 
 # Seed
 torch.manual_seed(args.seed)
